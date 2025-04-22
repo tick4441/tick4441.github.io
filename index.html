@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BananaBTP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            color: black;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            animation: bgChange 5s infinite alternate;
+        }
+
+        @keyframes bgChange {
+            0% { background-color: red; }
+            25% { background-color: orange; }
+            50% { background-color: yellow; }
+            75% { background-color: lime; }
+            100% { background-color: cyan; }
+        }
+
+        .button {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background-color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 0 10px white;
+            animation: glow 1.5s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 10px white; }
+            to { box-shadow: 0 0 20px white; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to BananaBTP!</h1>
+    <p>Please note this is a chatbot, not a real person!</p>
+    <p> BananaBTP is a free online chatbot.</p>
+    <p>chat with BananaBTP chatbot below!</p>
+    <a href="https://7481-2600-1700-e903-3600-4c1d-afa4-9534-c502.ngrok-free.app" class="button">Chat with BananaBTP Bot</a>
+</body>
+</html>
