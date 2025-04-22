@@ -1,2 +1,2 @@
 # tick4441.github.io
-if you are here you are on the wrong page! Please enter "index.html" at the end of this url.
+if you are here you are on the wrong page! Please enter "index.html" at the end of this url. if you are on index.html, then the site may be updating so wait a couple of seconds and refresh. if all else fails, That means the server is down for maintenance and you can go to "tick4441.github.io/tempbot.html" for a temporary chatbot until the other bot is back up. you can check back periodically on the main index.html site to see if it is back up. 
