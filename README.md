@@ -1,2 +1,2 @@
 # tick4441.github.io
-My website
+if you are here you are on the wrong page! Please enter "index.html" at the end of this url.
