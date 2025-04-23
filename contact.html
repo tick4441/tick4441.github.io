@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Contact Developer - BananaBTP</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #ffc107;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #ffb300;
+    }
+  </style>
+</head>
+<body>
+  <h2>Contact developer</h2>
+  <p>Please send feedback or anything you'd like to say to the developer of BananaBTP and it will be sent to them.</p>
+  
+  <textarea id="message" placeholder="Type your message here..."></textarea>
+  <br>
+  <button onclick="openGmail()">Send</button>
+
+  <script>
+    function openGmail() {
+      const message = encodeURIComponent(document.getElementById('message').value);
+      const subject = encodeURIComponent("BananaBTP questions and/or contact info");
+      const to = "aaronjo594@gmail.com";
+
+      const gmailURL = `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${subject}&body=${message}`;
+      window.open(gmailURL, '_blank');
+    }
+  </script>
+</body>
+</html>
