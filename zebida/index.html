@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zebida Chat</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #121212;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      overflow: hidden;
+    }
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+    .chat-box {
+      flex-grow: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .input-container {
+      display: flex;
+      padding: 10px;
+      background: #1e1e1e;
+    }
+    .input-container input {
+      flex-grow: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background: #333;
+      color: white;
+    }
+    .input-container button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .chat-message {
+      margin-bottom: 10px;
+      padding: 10px 15px;
+      border-radius: 15px;
+      max-width: 80%;
+      word-wrap: break-word;
+      font-size: 14px;
+      line-height: 1.5;
+      display: inline-block;
+    }
+    .user-message {
+      background-color: #0056b3;
+      color: white;
+      align-self: flex-end;
+    }
+    .bot-message {
+      background-color: #2e2e2e;
+      align-self: flex-start;
+    }
+    .typing {
+      font-style: italic;
+      opacity: 0.6;
+    }
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      color: white;
+      flex-direction: column;
+    }
+    .overlay.active {
+      display: flex;
+    }
+    .overlay-box {
+      background: #1c1c1c;
+      padding: 30px;
+      border-radius: 10px;
+      width: 300px;
+      text-align: center;
+    }
+    .overlay-box input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: none;
+      background: #333;
+      color: white;
+    }
+    .overlay-box button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .instructions {
+      background-color: #333;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px;
+    }
+    .download-btn {
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-box" id="chatBox"></div>
+    <div class="input-container">
+      <input type="text" id="userInput" placeholder="Type your message..."/>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="mainOverlay">
+    <div class="overlay-box" id="downloadPromptBox">
+      <h3>Would you like to download userdata.json?</h3>
+      <p>This file contains what the bot learned during the session.</p>
+      <button onclick="confirmDownload()">Yes, download it</button>
+      <button onclick="skipDownload()">No, exit without saving</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="usernameOverlay">
+    <div class="overlay-box">
+      <h3>Enter new username</h3>
+      <p>Current username: <span id="currentUsername"></span></p>
+      <input id="newUsernameInput" placeholder="New username"/>
+      <button onclick="saveUsername()">Save changes</button>
+      <button onclick="cancelUsername()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="instructions" id="instructions">
+    <h3>How to use userdata.json:</h3>
+    <p>
+      The file <code>userdata.json</code> contains the chat data that the bot learns from.
+      It is used to improve responses for the future. After downloading the file, you can analyze or use it to train other bots.
+      Each time you interact with the bot, it learns and updates the data.
+    </p>
+    <button class="download-btn" onclick="downloadUserData()">Download userdata.json</button>
+  </div>
+
+  <script src="elizabot.js"></script>
+  <script src="elizadata.js"></script>
+
+  <script>
+    const allowedNames = ["Jake", "Bot", "Suzzie", "Chalks", "Brain", "BananaBTP", "George"];
+    const colors = ["red", "orange", "yellow", "green", "blue", "pink", "purple"];
+    let username = "You";
+    let bot = null;
+    let botColor = "";
+    let selfChat = window.location.search.includes("--cwy");
+    let chatBox = document.getElementById("chatBox");
+    let userMessages = [];
+
+    function getRandomName() {
+      const base = allowedNames[Math.floor(Math.random() * allowedNames.length)];
+      const suffix = Math.random().toString(36).substring(2, 5).toUpperCase();
+      return `${base}${suffix}`;
+    }
+
+    function getRandomColor() {
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    function scrollToBottom() {
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function addMessage(sender, message, color, isTyping = false) {
+      const msg = document.createElement("div");
+      msg.className = "chat-message";
+      msg.style.color = color;
+      if (sender === username) {
+        msg.classList.add("user-message");
+        msg.textContent = message;
+      } else {
+        msg.classList.add("bot-message");
+        msg.innerHTML = isTyping ? `<i>${sender} is typing...</i>` : `<b>${sender}:</b> ${message}`;
+      }
+      chatBox.appendChild(msg);
+      scrollToBottom();
+      return msg;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("userInput");
+      const text = input.value.trim();
+      if (!text) return;
+      addMessage(username, text, "white");
+      input.value = "";
+
+      userMessages.push(text);
+
+      if (text.toLowerCase() === "exit") {
+        if (bot) {
+          const bye = [
+            `Bye bye! It was cool seeing you, ${username}!`,
+            "Thx for chatting!",
+            "BYEEEEEEEE",
+            `Ok ${username}, bye! See you later!`
+          ];
+          setTimeout(() => addMessage(bot.name, bye[Math.floor(Math.random() * bye.length)], botColor), 500);
+        }
+        setTimeout(() => {
+          document.getElementById("mainOverlay").classList.add("active");
+        }, 1500);
+        return;
+      }
+
+      if (bot) {
+        const reply = bot.eliza.transform(text);
+        addMessage(bot.name, reply, botColor);
+      }
+    }
+
+    function confirmDownload() {
+      downloadUserData();
+      document.getElementById("mainOverlay").classList.remove("active");
+    }
+
+    function skipDownload() {
+      document.getElementById("mainOverlay").classList.remove("active");
+    }
+
+    function downloadUserData() {
+      const userData = JSON.stringify({ messages: userMessages });
+      const blob = new Blob([userData], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'userdata.json';
+      link.click();
+    }
+
+    function resetChat() {
+      bot = null;
+      document.getElementById("mainOverlay").classList.remove("active");
+      chatBox.innerHTML = "";
+      if (selfChat) startSelfChat();
+      else createBot();
+    }
+
+    function showChangeUsername() {
+      document.getElementById("mainOverlay").classList.remove("active");
+      document.getElementById("usernameOverlay").classList.add("active");
+      document.getElementById("currentUsername").textContent = username;
+    }
+
+    function cancelUsername() {
+      document.getElementById("usernameOverlay").classList.remove("active");
+      document.getElementById("mainOverlay").classList.add("active");
+    }
+
+    function saveUsername() {
+      const newname = document.getElementById("newUsernameInput").value.trim();
+      if (newname) username = newname;
+      cancelUsername();
+    }
+
+    function createBot() {
+      bot = {
+        name: getRandomName(),
+        eliza: new ElizaBot()
+      };
+      botColor = getRandomColor();
+      setTimeout(() => {
+        const hi = bot.eliza.getInitial();
+        addMessage(bot.name, hi, botColor);
+      }, 500);
+      return bot;
+    }
+
+    function startSelfChat() {
+      createBot();
+
+      setInterval(() => {
+        if (!bot) return;
+
+        const msg = "How are you today?";
+        const reply = bot.eliza.transform(msg);
+
+        const typingBubble = addMessage(bot.name, "", botColor, true);
+        setTimeout(() => {
+          typingBubble.remove();
+          addMessage(bot.name, msg, botColor);
+          setTimeout(() => {
+            addMessage(bot.name, reply, botColor);
+          }, 1500);
+        }, 1000);
+      }, 5000);
+    }
+
+    document.getElementById("userInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    window.onload = () => {
+      if (selfChat) startSelfChat();
+      else createBot();
+    };
+  </script>
+</body>
+</html>
