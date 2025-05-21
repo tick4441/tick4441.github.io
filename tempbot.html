@@ -4,20 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot</title>
-    <script src="responses.js"></script> <!-- Load chatbot responses -->
+    <script src="responses.js"></script>
     <style>
+        /* General Reset and Body Styling */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
         body { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; flex-direction: column; }
+
+        /* Credit Section Styling */
         .credit { text-align: center; font-size: 14px; padding: 10px; color: #555; }
         .credit a { color: #007bff; text-decoration: none; }
         .credit a:hover { text-decoration: underline; }
+
+        /* Chatbot Container Styling */
         .chatbot-container { width: 100%; height: 100%; display: flex; flex-direction: column; background-color: #fff; }
+
+        /* Header Styling */
         #header { background-color: #5d6d6d; color: #ffffff; padding: 20px; text-align: center; font-size: 1.2em; font-weight: bold; }
+
+        /* Main Chatbot Area Styling */
         #chatbot { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; background-color: #47788b; border: 1px solid #000000; padding: 10px; overflow: hidden; }
+
+        /* Conversation Area Styling */
         #conversation { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
+
+        /* Chatbot Message Styling (General) */
         .chatbot-message { display: flex; align-items: flex-start; font-size: 16px; line-height: 20px; border-radius: 20px; word-wrap: break-word; white-space: pre-wrap; max-width: 80%; padding: 10px; margin: 5px 0; }
+
+        /* Specific Chatbot Message Styling */
         .chatbot { background-color: rgb(234, 237, 238); color: #000000; align-self: flex-start; }
+
+        /* User Message Styling */
         .user-message { background-color: #9aa171; color: #fff; align-self: flex-end; }
+
+        /* Input Form Styling */
         #input-form { display: flex; align-items: center; border-top: 1px solid #196bd6; padding: 10px; background: #e9dce6; }
         #input-field { flex: 1; height: 40px; border: none; border-radius: 4px; padding: 0 10px; font-size: 14px; background: #fff; color: #000; outline: none; }
         .send-icon { width: 24px; height: 24px; }
@@ -46,43 +65,295 @@
     </div>
 
     <script>
+        // DOM Elements
         const chatbot = document.getElementById('chatbot');
         const conversation = document.getElementById('conversation');
         const inputForm = document.getElementById('input-form');
         const inputField = document.getElementById('input-field');
 
-        inputForm.addEventListener('submit', function(event) {
-            event.preventDefault();
+        let markovChain; // Global variable to store the Markov chain instance
+
+        /**
+         * MarkovChain Class: Implements a simple Markov chain for text generation.
+         * It learns word transitions from a given text corpus.
+         */
+        class MarkovChain {
+            constructor(order = 2) {
+                this.chains = {}; // Stores word transitions: {'word1 word2': ['next_word1', 'next_word2', ...]}
+                this.order = order; // The number of words in the prefix (e.g., 2 for bigrams)
+                this.startWords = []; // Stores words that commonly start sentences, for better generation beginnings
+            }
+
+            /**
+             * Trains the Markov chain model from a given text corpus.
+             * @param {string} text - The text to learn from.
+             */
+            train(text) {
+                // Basic text cleaning: lowercase, normalize spaces, add spaces around punctuation for proper tokenization
+                text = text.toLowerCase().replace(/\s+/g, ' ').replace(/([.!?])/g, ' $1 ').trim();
+                // Split text into sentences. This helps in identifying potential starting words for new sentences.
+                const sentences = text.split(/[.!?]+\s*/).filter(s => s.length > 0);
+
+                sentences.forEach(sentence => {
+                    const words = sentence.split(/\s+/).filter(w => w.length > 0);
+
+                    // If the sentence is long enough, add its first word to startWords.
+                    // Avoid adding very common short words as primary starting points.
+                    if (words.length > 0) {
+                        if (words[0].length > 1 && !['a', 'an', 'the', 'is', 'it', 'i', 'he', 'she', 'we', 'you', 'they', 'what', 'how', 'why'].includes(words[0])) {
+                            this.startWords.push(words[0]);
+                        }
+                    }
+
+                    // Build the Markov chains (prefix-to-suffix mappings)
+                    if (words.length < this.order + 1) {
+                        return; // Not enough words in this "sentence" to form a chain of the specified order
+                    }
+
+                    for (let i = 0; i <= words.length - this.order; i++) {
+                        const prefix = words.slice(i, i + this.order).join(' '); // e.g., "word1 word2"
+                        const suffix = words[i + this.order]; // e.g., "word3"
+
+                        if (!this.chains[prefix]) {
+                            this.chains[prefix] = [];
+                        }
+                        this.chains[prefix].push(suffix);
+                    }
+                });
+            }
+
+            /**
+             * Generates a sentence using the trained Markov chain.
+             * It attempts to use a seed word from the user's input for contextual responses.
+             * @param {string} seed - An optional word from user input to try and start the generation with.
+             * @param {number} maxLength - Maximum number of words in the generated sentence.
+             * @returns {string} The generated sentence.
+             */
+            generate(seed = '', maxLength = 25) {
+                let currentWords = [];
+                let generatedWords = [];
+                let potentialPrefixesFromSeed = [];
+
+                // 1. Attempt to find a starting prefix based on the user's seed word (for context)
+                if (seed) {
+                    const seedLower = seed.toLowerCase();
+                    for (const key in this.chains) {
+                        const keyWords = key.split(' ');
+                        // Check if any word within a prefix matches the seed
+                        if (keyWords.includes(seedLower)) {
+                            potentialPrefixesFromSeed.push(key);
+                        }
+                    }
+                }
+
+                // 2. Select the initial starting prefix for generation
+                if (potentialPrefixesFromSeed.length > 0) {
+                    // Use a relevant prefix if found based on the seed
+                    currentWords = potentialPrefixesFromSeed[Math.floor(Math.random() * potentialPrefixesFromSeed.length)].split(' ');
+                } else if (this.startWords.length > 0 && Object.keys(this.chains).length > 0) {
+                    // If no seed-based prefix, try to start with a recognized sentence start word
+                    const startWord = this.startWords[Math.floor(Math.random() * this.startWords.length)];
+                    const matchingPrefixes = Object.keys(this.chains).filter(p => p.startsWith(startWord));
+                    if (matchingPrefixes.length > 0) {
+                        currentWords = matchingPrefixes[Math.floor(Math.random() * matchingPrefixes.length)].split(' ');
+                    } else {
+                        // Fallback: if startWord doesn't form a known prefix, pick a random one
+                        const prefixes = Object.keys(this.chains);
+                        currentWords = prefixes[Math.floor(Math.random() * prefixes.length)].split(' ');
+                    }
+                } else if (Object.keys(this.chains).length > 0) {
+                    // Fallback: If no seed or startWords are effective, pick a completely random prefix
+                    const prefixes = Object.keys(this.chains);
+                    currentWords = prefixes[Math.floor(Math.random() * prefixes.length)].split(' ');
+                } else {
+                    return "I need more data to learn from."; // Markov model is empty
+                }
+
+                // Ensure 'currentWords' has enough words to form a prefix of 'order' length
+                // This might be necessary if the initial pick was shorter than 'order'
+                while (currentWords.length < this.order && Object.keys(this.chains).length > 0) {
+                    const prefixes = Object.keys(this.chains);
+                    currentWords = prefixes[Math.floor(Math.random() * prefixes.length)].split(' ');
+                }
+                if (currentWords.length < this.order) {
+                    return "I need more data to learn from."; // Still can't get enough words for a prefix
+                }
+
+                generatedWords = [...currentWords]; // Start building the sentence with the initial words
+
+                // 3. Generate subsequent words iteratively
+                for (let i = 0; i < maxLength; i++) {
+                    const prefix = currentWords.slice(currentWords.length - this.order).join(' '); // Get the current prefix
+                    const possibleNextWords = this.chains[prefix];
+
+                    if (!possibleNextWords || possibleNextWords.length === 0) {
+                        // If the chain breaks (no known next words for this prefix), try to find a new starting point
+                        const prefixes = Object.keys(this.chains);
+                        if (prefixes.length > 0) {
+                            currentWords = prefixes[Math.floor(Math.random() * prefixes.length)].split(' ');
+                            generatedWords.push(...currentWords); // Add the new starting words to the generated sentence
+                            continue; // Continue generation from the new start
+                        } else {
+                            break; // Cannot continue, no more data
+                        }
+                    }
+
+                    const nextWord = possibleNextWords[Math.floor(Math.random() * possibleNextWords.length)];
+                    generatedWords.push(nextWord); // Add the predicted next word
+                    currentWords.push(nextWord); // Update current words for the next prefix
+                    currentWords.shift(); // Remove the oldest word to maintain the 'order' window size
+
+                    // Stop if a sentence-ending punctuation mark is generated
+                    if (['.', '!', '?'].includes(nextWord)) {
+                        break;
+                    }
+                }
+
+                // Post-processing for better grammar and formatting
+                let result = generatedWords.join(' ');
+                result = result.replace(/\s([.!?])/g, '$1'); // Remove space before punctuation (e.g., "word . " -> "word.")
+                result = result.charAt(0).toUpperCase() + result.slice(1); // Capitalize the first letter of the sentence
+                if (!/[.!?]$/.test(result)) { // Add a period if the sentence doesn't end with punctuation
+                    result += '.';
+                }
+
+                // Simple check to remove duplicate adjacent words if they appear (common Markov chain artifact)
+                result = result.replace(/\b(\w+)\s+\1\b/g, '$1');
+
+                return result;
+            }
+        }
+
+        /**
+         * Initializes the chatbot by loading training data and training the Markov chain.
+         * This function runs when the page content is fully loaded.
+         */
+        async function initChatbot() {
+            markovChain = new MarkovChain(2); // Initialize Markov chain with an order of 2 (bigrams)
+
+            let combinedText = '';
+
+            // 1. Collect text from the 'responses' object (defined in responses.js)
+            // Ensure 'responses' object exists and is not null before trying to access it.
+            if (typeof responses !== 'undefined' && responses !== null) {
+                for (let key in responses) {
+                    // Use hasOwnProperty to avoid iterating over prototype properties
+                    if (Object.prototype.hasOwnProperty.call(responses, key)) {
+                        if (Array.isArray(responses[key])) {
+                            combinedText += responses[key].join(' ') + ' ';
+                        } else if (typeof responses[key] === 'string') {
+                            combinedText += responses[key] + ' ';
+                        }
+                    }
+                }
+            } else {
+                console.warn("'responses' object from responses.js not found or is empty. Markov chain will only use dataset.txt if available.");
+            }
+
+            // 2. Fetch dataset.txt from the specified URL
+            try {
+                const datasetUrl = 'https://tick4441.github.io/dataset.txt';
+                const response = await fetch(datasetUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} from ${datasetUrl}`);
+                }
+                const datasetText = await response.text();
+                combinedText += datasetText;
+            } catch (error) {
+                console.error('Error fetching dataset.txt:', error);
+                // The chatbot will still work with data from responses.js if dataset.txt fails to load.
+            }
+
+            // 3. Train the Markov chain with the combined text data
+            if (combinedText.trim().length > 0) {
+                markovChain.train(combinedText);
+                console.log('Markov chain trained successfully!');
+            } else {
+                console.warn('No training data found for Markov chain. Chatbot will rely only on predefined responses.');
+            }
+        }
+
+        // Call initChatbot when the DOM is fully loaded to ensure all HTML elements are ready
+        document.addEventListener('DOMContentLoaded', initChatbot);
+
+        /**
+         * Handles the user's message submission.
+         * This function is now asynchronous because it might await a response from the Markov chain.
+         */
+        inputForm.addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent default form submission and page reload
+
             const input = inputField.value.trim().toLowerCase();
-            if (input === '') return;
-            inputField.value = '';
+            if (input === '') return; // Do nothing if input is empty
+
+            inputField.value = ''; // Clear the input field after sending
             const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: "2-digit" });
 
-            let message = document.createElement('div');
-            message.classList.add('chatbot-message', 'user-message');
-            message.innerHTML = `<p class="chatbot-text" sentTime="${currentTime}">${input}</p>`;
-            conversation.appendChild(message);
+            // Display user message in the conversation
+            let userMessageDiv = document.createElement('div');
+            userMessageDiv.classList.add('chatbot-message', 'user-message');
+            userMessageDiv.innerHTML = `<p class="chatbot-text" sentTime="${currentTime}">${input}</p>`;
+            conversation.appendChild(userMessageDiv);
 
-            const response = generateResponse(input);
-            message = document.createElement('div');
-            message.classList.add('chatbot-message', 'chatbot');
-            message.innerHTML = `<p class="chatbot-text" sentTime="${currentTime}">${response}</p>`;
-            conversation.appendChild(message);
-            message.scrollIntoView({behavior: "smooth"});
+            // Get the bot's response (this call can now be asynchronous)
+            const botResponseText = await generateResponse(input);
+
+            // Display bot message in the conversation
+            let botMessageDiv = document.createElement('div');
+            botMessageDiv.classList.add('chatbot-message', 'chatbot');
+            botMessageDiv.innerHTML = `<p class="chatbot-text" sentTime="${currentTime}">${botResponseText}</p>`;
+            conversation.appendChild(botMessageDiv);
+
+            // Automatically scroll to the latest message for better user experience
+            botMessageDiv.scrollIntoView({behavior: "smooth"});
         });
 
-        function generateResponse(input) {
-            for (let key in responses) {
-                if (input.includes(key)) {
-                    return responses[key][Math.floor(Math.random() * responses[key].length)];
+        /**
+         * Generates a response from the chatbot.
+         * It first tries to find a predefined response in 'responses.js'.
+         * If no match is found, it falls back to generating a response using the Markov chain.
+         * @param {string} input - The user's input message.
+         * @returns {Promise<string>} The generated response text.
+         */
+        async function generateResponse(input) {
+            // 1. Check for direct matches from the 'responses' object (loaded from responses.js)
+            if (typeof responses !== 'undefined' && responses !== null) {
+                for (let key in responses) {
+                    if (Object.prototype.hasOwnProperty.call(responses, key)) {
+                        // If the user's input includes a predefined key, return a random response from that key's array
+                        if (input.includes(key)) {
+                            return responses[key][Math.floor(Math.random() * responses[key].length)];
+                        }
+                    }
                 }
             }
+
+            // 2. If no direct match, try generating a response using the Markov chain
+            if (markovChain) {
+                // Extract meaningful words from user input to potentially use as a seed for the Markov chain
+                const inputWords = input.split(/\s+/).filter(word => word.length > 2); // Filter out very short words
+                let seed = '';
+                // Look for a word in the user's input that exists in the Markov chain's prefixes to provide context
+                for (const word of inputWords) {
+                    const lowerWord = word.toLowerCase();
+                    if (Object.keys(markovChain.chains).some(prefix => prefix.includes(lowerWord))) {
+                        seed = lowerWord; // Use the first matching word as the seed
+                        break;
+                    }
+                }
+                // Generate a response using the Markov chain, attempting to use the seed for context
+                return markovChain.generate(seed, 25); // Max sentence length of 25 words for simplicity
+            }
+
+            // 3. Fallback message if no direct response is found and the Markov chain is not available or trained
             return "I'm not sure how to answer that. Can you ask me something else? 🤔";
         }
 
-        window.onblur = function () { 
-            alert('You are going away? Please don\'t! WAAAAAAAAAAAAAAAAAAAAAAA');
-        };
+        // The original window.onblur event handler is commented out as it can be intrusive.
+        // Uncomment the line below if you wish to re-enable this functionality.
+        // window.onblur = function () {
+        //     alert('You are going away? Please don\'t! WAAAAAAAAAAAAAAAAAAAAAAA');
+        // };
     </script>
 </body>
 </html>
