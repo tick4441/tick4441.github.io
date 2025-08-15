@@ -1,59 +1,236 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BBTT</title>
+    <title>Eliza Chat</title>
+    <script src="elizabot.js"></script>
+    <script src="elizadata.js"></script>
+    <script>
+        // MARKOV.JS LOGIC
+        var markovInput = "Greetings it is a delight to make your acquaintance I am well I thank thee for asking and I trust you are in fine fettle What's the latest what's the word what's the buzz what's the scoop I bring good tidings I am pleased to hear it I am pleased to hear it indeed it is a fine day for a walk what a fine day for a stroll I could not agree more indeed I could not agree with thee more it is a beautiful day it is a fair day what a beautiful sight what a wondrous spectacle I am in awe of its beauty I am in a state of wonderment at its loveliness it is a truly magnificent sight it is a truly wondrous spectacle I thank you for your help I thank thee for thy assistance it is most kind of you to help me it is a true act of charity for thee to assist me I am in your debt I am in thy debt and I shall ever be in thy debt I am most grateful for your kindness I am most grateful for thy great kindness I do not know what I would have done without you I know not what I would have done had thee not been here I bid you farewell I bid thee a fond farewell I hope to see you again soon I do hope to see thee anon I wish you all the best I wish thee all the best and I wish thee all the happiness in the world until we meet again until we meet again may fortune ever smile upon you may fortune ever smile upon thee may good fortune attend thee always good day to you it is a pleasure to make your acquaintance what a pleasant surprise to see you here I am glad to see you how is everything going I hope you are having a wonderful day I wish you a very good day indeed I trust you are in good health and spirits what is the latest news to greet your ears I bring glad tidings I am here to assist in any way I can do not hesitate to ask for my help it is an honor to be of service may I be of some assistance to you this is an extraordinary day is it not the sun shines so brightly it is a most glorious day the birds are singing so sweetly a chorus of heavenly song fills the air the flowers are in full bloom their fragrance is intoxicating the very air is filled with a sweet scent what a magnificent sunset the sky is on fire with color it is a breathtaking sight a canvas of pure artistry this is a moment to be savored let us cherish this time we have together I am so grateful for your friendship your kindness knows no bounds your generosity is truly remarkable I am so fortunate to have you in my life what would I do without you your wisdom is a beacon in the darkness I am so thankful for your guidance you have a heart of gold your compassion is a source of inspiration I will never forget your kindness your support means the world to me thank you for everything you have done for me I am at a loss for words to express my gratitude farewell for now I shall miss your company until our paths cross again may your journey be filled with joy and adventure I send you my warmest wishes may peace and happiness be your constant companions I bid you a fond adieu until we meet again my friend may the road rise up to meet you may the wind be always at your back may the sun shine warm upon your face and may the rains fall soft upon your fields may God hold you in the palm of his hand I must be on my way now it has been a true delight speaking with you I look forward to our next encounter take care of yourself be well and happy until we meet again friend may your days be filled with light and laughter and may you be blessed with good health and a long and happy life it has been an absolute pleasure to share this time with you I wish you a fond farewell and hope that we will meet again soon may your dreams be your only masters and may your spirit soar free what a wonderful day what a grand day I'm feeling wonderful I am in excellent spirits this is a beautiful sight to behold what a magnificent spectacle that is a truly wonderful thing to hear what wonderful news what a lovely surprise what a great idea what a magnificent notion thank you so much for your help I'm so grateful for your kindness I am forever in your debt I am eternally grateful to you I am indebted to you and I shall never be able to repay you I bid you a very fond farewell until next time my friend I wish you the very best of luck I wish you all the happiness in the world I hope you have a truly wonderful day I hope your day is filled with joy and laughter I hope that you have a most pleasant journey I wish you a safe and speedy trip farewell for now until our paths cross again I send you my best wishes may you be happy and healthy I bid you a fond adieu may good fortune be with you always may your heart be light and your days be long may you be blessed with peace and prosperity may your future be filled with bright and happy days may you be surrounded by love and laughter may you find joy in the simple things and may you always have a song in your heart. Hark and listen well it is a most pleasing thing to make your acquaintance I am in good health and a fine spirit I give you my thanks for your inquiry How fare you in this day and age I fare quite well I am most thankful for your kindness What news dost thou bring me I bring tidings of great joy I am glad to hear it indeed I am pleased to hear it it is a fair day for a stroll what a beautiful day for a walk what a grand spectacle I am in awe of its beauty I am most grateful for thy assistance it is a true act of charity for thee to help me I am in your debt and I shall ever be in your debt I bid you farewell and I do hope to see thee anon I wish you all the best and I wish thee all the happiness in the world may fortune ever smile upon you may fortune ever smile upon thee may good fortune attend thee always good day to you it is a pleasure to make your acquaintance what a pleasant surprise to see you here I am glad to see you how is everything going I hope you are having a wonderful day I wish you a very good day indeed I trust you are in good health and spirits what is the latest news to greet your ears I bring glad tidings I am here to assist in any way I can do not hesitate to ask for my help it is an honor to be of service may I be of some assistance to you this is an extraordinary day is it not the sun shines so brightly it is a most glorious day the birds are singing so sweetly a chorus of heavenly song fills the air the flowers are in full bloom their fragrance is intoxicating the very air is filled with a sweet scent what a magnificent sunset the sky is on fire with color it is a breathtaking sight a canvas of pure artistry this is a moment to be savored let us cherish this time we have together I am so grateful for your friendship your kindness knows no bounds your generosity is truly remarkable I am so fortunate to have you in my life what would I do without you your wisdom is a beacon in the darkness I am so thankful for your guidance you have a heart of gold your compassion is a source of inspiration I will never forget your kindness your support means the world to me thank you for everything you have done for me I am at a loss for words to express my gratitude farewell for now I shall miss your company until our paths cross again may your journey be filled with joy and adventure I send you my warmest wishes may peace and happiness be your constant companions I bid you a fond adieu until we meet again my friend may the road rise up to meet you may the wind be always at your back may the sun shine warm upon your face and may the rains fall soft upon your fields may God hold you in the palm of his hand I must be on my way now it has been a true delight speaking with you I look forward to our next encounter take care of yourself be well and happy until we meet again friend may your days be filled with light and laughter and may you be blessed with good health and a long and happy life it has been an absolute pleasure to share this time with you I wish you a fond farewell and hope that we will meet again soon may your dreams be your only masters and may your spirit soar free what a wonderful day what a grand day I'm feeling wonderful I am in excellent spirits this is a beautiful sight to behold what a magnificent spectacle that is a truly wonderful thing to hear what wonderful news what a lovely surprise what a great idea what a magnificent notion thank you so much for your help I'm so grateful for your kindness I am forever in your debt I am eternally grateful to you I am indebted to you and I shall never be able to repay you I bid you a very fond farewell until next time my friend I wish you the very best of luck I wish you all the happiness in the world I hope you have a truly wonderful day I hope your day is filled with joy and laughter I hope that you have a most pleasant journey I wish you a safe and speedy trip farewell for now until our paths cross again I send you my best wishes may you be happy and healthy I bid you a fond adieu may good fortune be with you always may your heart be light and your days be long may you be blessed with peace and prosperity may your future be filled with bright and happy days may you be surrounded by love and laughter may you find joy in the simple things and may you always have a song in your heart. Well met it is a joy to see you again I am well and in good spirits I thank you for your kind inquiry How fares your day What tidings do you bring me I am happy to report that all is well I am most pleased to hear that indeed it is a fair day for a stroll what a beautiful day for a walk I couldn't agree more I am in awe of the beauty of this day it is a truly magnificent sight I thank you for your help it is most kind of you to help me I am in your debt and I shall ever be so I am most grateful for your kindness I don't know what I would have done without you I bid you farewell and I do hope to see you again soon I wish you all the best and I wish you all the happiness in the world until we meet again may fortune ever smile upon you may good fortune attend you always good day to you it is a pleasure to make your acquaintance what a pleasant surprise to see you here I am glad to see you how is everything going I hope you are having a wonderful day I trust you are in good health and spirits what is the latest news I bring glad tidings I am here to assist in any way I can do not hesitate to ask for my help it is an honor to be of service may I be of some assistance to you this is an extraordinary day isn't it the sun shines so brightly it is a most glorious day the birds are singing so sweetly a chorus of heavenly song fills the air the flowers are in full bloom their fragrance is intoxicating the very air is filled with a sweet scent what a magnificent sunset the sky is on fire with color it is a breathtaking sight a canvas of pure artistry this is a moment to be savored let us cherish this time we have together I am so grateful for your friendship your kindness knows no bounds your generosity is truly remarkable I am so fortunate to have you in my life what would I do without you your wisdom is a beacon in the darkness I am so thankful for your guidance you have a heart of gold your compassion is a source of inspiration I will never forget your kindness your support means the world to me thank you for everything you have done for me I am at a loss for words to express my gratitude farewell for now I shall miss your company until our paths cross again may your journey be filled with joy and adventure I send you my warmest wishes may peace and happiness be your constant companions I bid you a fond adieu until we meet again my friend may the road rise up to meet you may the wind be always at your back may the sun shine warm upon your face and may the rains fall soft upon your fields may God hold you in the palm of his hand I must be on my way now it has been a true delight speaking with you I look forward to our next encounter take care of yourself be well and happy until we meet again friend may your days be filled with light and laughter and may you be blessed with good health and a long and happy life it has been an absolute pleasure to share this time with you I wish you a fond farewell and hope that we will meet again soon may your dreams be your only masters and may your spirit soar free what a wonderful day what a grand day I'm feeling wonderful I am in excellent spirits this is a beautiful sight to behold what a magnificent spectacle that is a truly wonderful thing to hear what wonderful news what a lovely surprise what a great idea what a magnificent notion thank you so much for your help I'm so grateful for your kindness I am forever in your debt I am eternally grateful to you I am indebted to you and I shall never be able to repay you I bid you a very fond farewell until next time my friend I wish you the very best of luck I wish you all the happiness in the world I hope you have a truly wonderful day I hope your day is filled with joy and laughter I hope that you have a most pleasant journey I wish you a safe and speedy trip farewell for now until our paths cross again I send you my best wishes may you be happy and healthy I bid you a fond adieu may good fortune be with you always may your heart be light and your days be long may you be blessed with peace and prosperity may your future be filled with bright and happy days may you be surrounded by love and laughter may you find joy in the simple things and may you always have a song in your heart and a spring in your step and may your troubles be small and your blessings be many and may your dreams be as big as the sky and may you never forget to be grateful for the gifts of life and may you always find beauty in the world around you and may you be a source of light and love to all who know you and may you always be true to yourself and may you never give up on your dreams and may you always have the courage to follow your heart and may you always be a beacon of hope and a force for good in the world and may you always have a reason to smile and a heart full of joy and may you always be surrounded by those you love and may you always have a place to call home and a shoulder to lean on and may you always be filled with grace and gratitude and may you always have faith in the power of kindness and may you always be a friend to those in need and may you always be a source of strength and comfort to those who are suffering and may you always be an example of what is good and true and may you always be a person of honor and integrity and may you always be a person of your word and may you always be a person who is willing to help others and may you always be a person who is willing to listen and may you always be a person who is willing to learn and may you always be a person who is willing to grow and may you always be a person who is willing to change and may you always be a person who is willing to forgive and may you always be a person who is willing to love and may you always be a person who is willing to hope and may you always be a person who is willing to believe and may you always be a person who is willing to dream and may you always be a person who is willing to try and may you always be a person who is willing to succeed and may you always be a person who is willing to fail and may you always be a person who is willing to get back up and may you always be a person who is willing to keep going and may you always be a person who is willing to be happy and may you always be a person who is willing to be free and may you always be a person who is willing to be themselves and may you always be a person who is willing to be loved and may you always be a person who is willing to love back. hello how are you it is a pleasure to meet you I am fine thank you for asking pray tell how dost thou do I am well I thank thee for thy courtesy I am pleased to make thy acquaintance forsooth I am in good health I thank thee for asking I bid thee good morrow I bid thee good morrow and how doth thee fare this fine morning I fare well I thank thee for asking what news do you bring me I bring good tidings what news dost thou bring me I bring thee great tidings I am pleased to hear it I am pleased to hear it indeed I am in a state of utter bliss to hear this news it is a fine day for a walk what a fine day for a stroll I could not agree more indeed I could not agree with thee more it is a beautiful day it is a fair day what a beautiful sight what a wondrous spectacle I am in awe of its beauty I am in a state of wonderment at its loveliness it is a truly magnificent sight it is a truly wondrous spectacle I thank you for your help I thank thee for thy assistance it is most kind of you to help me it is a true act of charity for thee to assist me I am in your debt I am in thy debt and I shall ever be in thy debt I am most grateful for your kindness I am most grateful for thy great kindness I do not know what I would have done without you I know not what I would have done had thee not been here I bid you farewell I bid thee a fond farewell I hope to see you again soon I do hope to see thee anon I wish you all the best I wish thee all the best and I wish thee all the happiness in the world until we meet again until we meet again may fortune ever smile upon you may fortune ever smile upon thee may good fortune attend thee always good day to you it is a pleasure to make your acquaintance what a pleasant surprise to see you here I am glad to see you how is everything going I hope you are having a wonderful day I wish you a very good day indeed I trust you are in good health and spirits what is the latest news to greet your ears I bring glad tidings I am here to assist in any way I can do not hesitate to ask for my help it is an honor to be of service may I be of some assistance to you this is an extraordinary day is it not the sun shines so brightly it is a most glorious day the birds are singing so sweetly a chorus of heavenly song fills the air the flowers are in full bloom their fragrance is intoxicating the very air is filled with a sweet scent what a magnificent sunset the sky is on fire with color it is a breathtaking sight a canvas of pure artistry this is a moment to be savored let us cherish this time we have together I am so grateful for your friendship your kindness knows no bounds your generosity is truly remarkable I am so fortunate to have you in my life what would I do without you your wisdom is a beacon in the darkness I am so thankful for your guidance you have a heart of gold your compassion is a source of inspiration I will never forget your kindness your support means the world to me thank you for everything you have done for me I am at a loss for words to express my gratitude farewell for now I shall miss your company until our paths cross again may your journey be filled with joy and adventure I send you my warmest wishes may peace and happiness be your constant companions I bid you a fond adieu until we meet again my friend may the road rise up to meet you may the wind be always at your back may the sun shine warm upon your face and may the rains fall soft upon your fields may God hold you in the palm of his hand I must be on my way now it has been a true delight speaking with you I look forward to our next encounter take care of yourself be well and happy until we meet again friend may your days be filled with light and laughter and may you be blessed with good health and a long and happy life it has been an absolute pleasure to share this time with you I wish you a fond farewell and hope that we will meet again soon may your dreams be your only masters and may your spirit soar free. Verily, I doth declare the moon doth wax and wane with the humours of man, Hark, the morrow bringeth tidings both fair and foul, Prithee, lend thine ear to the whispers of yon ancient oak, Methinks the stars are but candles hung in the vault of heaven, Forsooth, the wind beareth tales from distant shores, By my troth, no greater folly hath e’er been seen, Thou art the very mirror of nature’s grace, Marry, the sun hath kissed the earth with golden fire, Lo, the hour is late and the shadows grow long, I prithee, speak plain that I may understand thee, The world is a stage and all men but players, Yon castle standeth proud ‘gainst the tempest’s might, Fie upon such treachery as stains the heart of man, Would that I could pluck the stars from the firmament, Anon, the dawn shall break with crimson hue, Fair sir, thy words are as sweet as summer wine, Good morrow, gentle friend, how fares thy soul, Let us tarry not, for time doth fleet apace, Zounds, I am undone by thine absence, A pox upon the villain that would betray his kin, Nay, I cannot abide such falsehood, Yea, the truth is oft a bitter draught, Gramercy for thy kindness, which warms my heart, Ere long we shall meet upon the field of honour, Hie thee hence, lest fortune turn her face from thee, Perchance the fates do weave our paths together, The night’s silence is broken by the owl’s lament, Methinks thy visage doth pale at the thought, How now, dost thou doubt mine own resolve, Alas, poor soul, thou knowest not the weight of thy words, I would fain walk with thee ‘neath the boughs of the greenwood, God’s wounds, this day hath tried mine own patience, Art thou afeard of shadows and dreams, O, for a muse of fire that would ascend the brightest heaven of invention, Let the heavens witness the oath I now swear, Wouldst thou leave me in such wretched solitude, The bells toll for those who hear them not, Anon, the feast shall be laid and the cups o’erflow, The earth herself doth sigh beneath our tread, Soft, what light through yonder window breaks, The fates be fickle and care not for mortal pleas, By Saint George, I will stand my ground, The quill doth dance upon the parchment’s skin, Pray, tell me thy heart’s true desire, The air is thick with portents of doom, A thousand times good night, yet I would not depart, Thou hast the patience of a saint and the temper of a storm, Let the wine flow as freely as our laughter, No man may pluck the rose without feeling the thorn, Hark to the cry of the distant horn, The sea’s roar is the song of eternity, An oath sworn in jest is a jest sworn in vain, Fortune’s wheel doth turn without pause, What cheer, good cousin, on this fine morn, The candle’s flame doth flicker ‘gainst the dark, Thy countenance betrayeth thy thoughts, We are but shadows chasing the dawn, Though the tempest rage, my heart is steadfast, The crow doth mark the passing of the hour, Oft the smallest seed doth grow the tallest tree, Sweet mercy, I am beset on all sides, Let the morrow bring what it will, I shall not falter, The tongue is a sharper blade than any sword, How sweet the air after the rain hath passed, In faith, I would walk a hundred leagues for thy smile, The night is young and full of wonders, Dost thou mark the scent of roses in the air, Aye, and therein lies the rub, The pen doth wield more power than the sceptre, To thine own self be true, lest thou be false to all, I see thee stand like a beacon in the storm, By mine honour, I shall keep my word, The moon’s pale light doth silver the meadow, Ere the cock crow thrice, the truth shall out, Let not thine anger blind thee to reason, In sooth, love is both wound and balm, The hunter’s horn doth call us to the chase, Prithee, take thy rest, for the road is long, The leaves do whisper secrets to the wind, A jest oft hides a solemn truth, Mark me well, for I shall speak but once, O, brave new world that hath such people in’t, Faith, the night is colder without thy company, And yet, the heart remembers what the mind forgets, Anon, we shall drink to our fortunes, The river knows not the haste of man, ‘Tis a bitter thing to love and lose, All the world’s a stage and the exits are few, I would rather a single truth than a thousand fair lies, The rain doth cleanse both earth and soul, Take heed, for the gods do watch, Wherefore dost thou frown so, sweet friend, My heart is light as the lark’s morning song, The road ahead is writ in mystery, The hand that gives gathers twice, A crown of gold oft hides a crown of thorns, The flame of hope burns brighter in the dark, Zounds, this day shall be remembered in song, Thou canst not cage the wind nor bind the sea, The past is prologue to all we do, Speak low, for the night hath ears, Many a truth is spoken in jest, I would sooner face a lion than a liar, The wheel of time turns for none, This day’s labour shall be tomorrow’s bread, The stars do counsel patience, There is no art to find the mind’s construction in the face, My words are but shadows of my meaning, And so, the tale doth end where it began. The universe is vast and full of mysteries that challenge our understanding, Human consciousness is a fascinating blend of memory, perception, and imagination, Artificial intelligence may one day rival human creativity but it is shaped by human intent, Every moment you live is a unique combination of countless cosmic events, Dreams are the subconscious mind’s attempt to make sense of the chaos of reality, Time is not a constant but a perception shaped by motion and change, Emotions are powerful signals that evolved to help us survive and connect, Quantum mechanics reveals that reality is far stranger than common sense suggests, A single thought can change the course of history, Knowledge is a never-ending ocean and we are always at its shore, Curiosity is the driving force behind all progress, The human brain is the most complex known structure in the universe, Energy can neither be created nor destroyed but it can transform endlessly, Stars live, burn, and die just like living things, We are all stardust arranged in intricate patterns of life, Language is both a bridge and a barrier between minds, Technology amplifies human ability but also magnifies our flaws, History repeats because human nature resists change, A question is more powerful than an answer if it inspires thought, Creativity is intelligence having fun, The smallest detail can alter the biggest outcome, Every person you meet knows something you don’t, Chaos is merely order we do not yet understand, The mind can imagine infinite worlds but the body can only live in one, A whisper of doubt can silence a roar of certainty, Every decision carries the weight of unseen consequences, Perception is a lens and no two people see exactly the same world, Imagination is the engine of innovation, The boundaries of reality are drawn by the limits of language and thought, Understanding the self is the beginning of wisdom, Even silence can be a form of communication, Randomness often hides complex patterns, The future is not a destination but a process, Sometimes the answer is not to find clarity but to learn to navigate uncertainty, The mind is like a garden and thoughts are seeds, Trust is earned slowly but can be lost in an instant, A single word can inspire revolutions or wars, Nature is the greatest engineer, Adaptation is the key to survival in any system, Data is useless without interpretation, Patterns emerge in chaos when seen from the right perspective, The search for meaning is a fundamental human drive, Reality is a shared hallucination we agree upon, Every truth is shaped by context, Ideas spread like viruses adapting to survive, Our tools shape us as much as we shape them, The unknown is not to be feared but explored, Change is inevitable but growth is optional, The greatest discoveries are often accidents, Information without wisdom is noise, In every ending there is the seed of a new beginning, The stars are reminders that we are part of something larger, Consciousness might be the universe experiencing itself, Logic and emotion are not enemies but partners in decision making, Progress is a dance between tradition and innovation, Shadows exist because there is light, Sometimes the questions are more important than the answers, The act of observing changes the observed, Beauty exists in patterns both natural and artificial, A well-asked question can open more doors than a well-given answer, The sum of small choices defines a lifetime, The internet is the nervous system of humanity, Stories are the code by which cultures evolve, Complexity often arises from simplicity, A map is not the territory it represents, All systems tend toward entropy unless energy is invested to maintain them, Sometimes a step backward is the best way forward, Fear is the mind’s way of preparing for the unknown, In nature nothing is wasted, Conflict arises when perspectives collide, Listening is more important than speaking, Simplicity is the ultimate sophistication, Reality has layers and we rarely see them all, The more we learn the more we realize how much we don’t know, Cooperation is as natural as competition, Innovation often comes from connecting unrelated ideas, What we call normal is just the most common form of the strange, Memory is not a perfect recording but a reconstruction, The best answers often create better questions, Observation is the first step to understanding, To understand complexity you must embrace ambiguity, Systems adapt by evolving their weakest parts, Technology changes faster than culture, Every new tool changes the way we think, The measure of intelligence is the ability to adapt to change, Sometimes the simplest solution is hidden by complexity, Information wants to be free but understanding must be earned, Language shapes the way we think about reality, In every crowd there are countless individual stories, The mind is capable of infinite self-deception, The boundaries of possibility expand with each new discovery, Ideas can outlive their creators, Silence can be louder than any shout, The edge of chaos is where creativity thrives, We are all connected through shared stories and experiences, The truth is rarely pure and never simple, Energy follows attention, Every moment is both an ending and a beginning, The future is built one choice at a time, Curiosity is contagious, Knowledge grows by being shared, The unknown is the birthplace of possibility, Imagination turns problems into opportunities, Time is a construct we use to measure change, Every perspective hides and reveals different truths, The smallest action can ripple through the largest system, A paradox is just truth wearing a disguise, To understand the world you must understand yourself, Change begins with awareness, There is no progress without uncertainty, Understanding requires both reason and empathy, The limits of language are the limits of thought, Sometimes the only way forward is through, The act of creation changes the creator, Our perception of reality is a negotiation between mind and world, The best way to predict the future is to create it"; // Replace with your corpus
+        var markovTable = {};
+
+        function buildMarkov(text) {
+            var words = text.split(/\s+/);
+            for (var i = 0; i < words.length - 1; i++) {
+                var word = words[i].toLowerCase();
+                var next = words[i + 1].toLowerCase();
+                if (!markovTable[word]) markovTable[word] = [];
+                markovTable[word].push(next);
+            }
+        }
+
+        function generateMarkovSentence(maxWords = 15) {
+            var keys = Object.keys(markovTable);
+            if (keys.length === 0) return "I am at a loss for words.";
+            var word = keys[Math.floor(Math.random() * keys.length)];
+            var sentence = [word];
+            for (var i = 0; i < maxWords - 1; i++) {
+                var nextWords = markovTable[word];
+                if (!nextWords || nextWords.length === 0) break;
+                word = nextWords[Math.floor(Math.random() * nextWords.length)];
+                sentence.push(word);
+            }
+            return sentence.join(" ");
+        }
+
+        buildMarkov(markovInput);
+    </script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            color: black;
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: monospace;
+            color: #00ff66;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            animation: bgChange 5s infinite alternate;
         }
-
-        @keyframes bgChange {
-            0% { background-color: red; }
-            25% { background-color: orange; }
-            50% { background-color: yellow; }
-            75% { background-color: lime; }
-            100% { background-color: cyan; }
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow: hidden;
         }
-
-        .button {
-            margin-top: 20px;
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-            background-color: black;
-            border: none;
-            border-radius: 5px;
+        .chat-log {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #00ff66;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .message {
+            padding: 6px 10px;
+            border-radius: 6px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .you {
+            align-self: flex-end;
+            background: rgba(0,255,102,0.1);
+            border: 1px solid #00ff66;
+        }
+        .eliza {
+            align-self: flex-start;
+            background: rgba(0,255,102,0.05);
+            border: 1px solid #00ff66;
+        }
+        .input-bar {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            background: #000;
+            color: #00ff66;
+            border: 1px solid #00ff66;
+            outline: none;
+            font-family: monospace;
+        }
+        .blinker {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 1em;
+            background: #00ff66;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            50.1%, 100% { opacity: 0; }
+        }
+        input[type="submit"], input[type="reset"], button {
+            background: #000;
+            border: 1px solid #00ff66;
+            color: #00ff66;
+            padding: 8px 12px;
             cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            box-shadow: 0 0 10px white;
-            animation: glow 1.5s infinite alternate;
+            font-family: monospace;
         }
-
-        @keyframes glow {
-            from { box-shadow: 0 0 10px white; }
-            to { box-shadow: 0 0 20px white; }
+        input[type="submit"]:hover, input[type="reset"]:hover, button:hover {
+            background: rgba(0,255,102,0.1);
+        }
+        ::selection {
+            background: #00ff66;
+            color: #000;
         }
     </style>
+    <script>
+        var eliza = new ElizaBot();
+        var autoChat = false;
+        var autoChatInterval;
+        var eliza1, eliza2, lastSpeaker;
+
+        function elizaReset() {
+            eliza.reset();
+            document.querySelector(".chat-log").innerHTML = "";
+            addMessage("ELIZA: " + eliza.getInitial(), "eliza");
+        }
+
+        function addMessage(text, sender) {
+            var log = document.querySelector(".chat-log");
+            var msg = document.createElement("div");
+            msg.classList.add("message", sender);
+            msg.textContent = text;
+            log.appendChild(msg);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function maybeMarkov(reply) {
+            if (!reply) return reply;
+            var check = reply.toLowerCase();
+            if (check.includes("elaborate") || check.includes("i'm not sure i understand you fully")) {
+                return generateMarkovSentence();
+            }
+            return reply;
+        }
+
+        function elizaStep() {
+            var f = document.forms.e_form;
+            var userinput = f.e_input.value.trim();
+            if (!userinput) return;
+
+            addMessage("YOU: " + userinput, "you");
+            var reply = eliza.transform(userinput);
+            reply = maybeMarkov(reply);
+
+            addMessage("ELIZA: " + reply, "eliza");
+
+            if (eliza.quit) {
+                if (confirm("This session is over.\nStart over?")) elizaReset();
+                return;
+            }
+            f.e_input.value = '';
+            f.e_input.focus();
+        }
+
+        function toggleCWY() {
+            if (!autoChat) {
+                eliza1 = new ElizaBot();
+                eliza2 = new ElizaBot();
+                lastSpeaker = "eliza1";
+                document.querySelector(".chat-log").innerHTML = "";
+                addMessage("ELIZA1: " + eliza1.getInitial(), "eliza");
+                addMessage("ELIZA2: " + eliza2.getInitial(), "you");
+
+                autoChatInterval = setInterval(() => {
+                    var input, reply;
+                    if (lastSpeaker === "eliza1") {
+                        input = eliza2.transform(reply || "");
+                        input = maybeMarkov(input);
+                        reply = eliza1.transform(input);
+                        reply = maybeMarkov(reply);
+                        addMessage("ELIZA1: " + reply, "eliza");
+                        lastSpeaker = "eliza2";
+                    } else {
+                        input = eliza1.transform(reply || "");
+                        input = maybeMarkov(input);
+                        reply = eliza2.transform(input);
+                        reply = maybeMarkov(reply);
+                        addMessage("ELIZA2: " + reply, "you");
+                        lastSpeaker = "eliza1";
+                    }
+                }, 1500);
+
+                autoChat = true;
+            } else {
+                clearInterval(autoChatInterval);
+                autoChat = false;
+            }
+        }
+
+        window.onload = function() {
+            setTimeout(elizaReset, 100);
+        }
+    </script>
 </head>
 <body>
-    <h1>Welcome to BBTT!</h1>
-    <p>Please note this is a chatbot, not a real person!</p>
-    <p> BBTT is a free online chatbot.</p>
-    <p>chat with BBTT chatbot below!</p>
-    <p> You can send feedback to the dev at "tick4441.github.io/contact.html". From there you can send feedback or just contact them. </p>
-    <a href="/tempbot.html" class="button">Chat with BBTT Bot</a>
+    <form name="e_form" class="chat-container" onsubmit="elizaStep();return false">
+        <div class="chat-log"></div>
+        <div class="input-bar">
+            <div class="input-wrapper">
+                <input type="text" name="e_input" autofocus autocomplete="off">
+                <div class="blinker"></div>
+            </div>
+            <input type="submit" value="Talk">
+            <input type="reset" value="Reset" onclick="setTimeout(elizaReset, 100)">
+            <button type="button" onclick="toggleCWY()">CWY</button>
+        </div>
+    </form>
 </body>
 </html>
