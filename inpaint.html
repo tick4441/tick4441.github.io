@@ -1,0 +1,685 @@
+<!--
+  This is a simple HTML/JavaScript application for basic image and video inpainting
+  using a "smear" technique.
+
+  Key Feature: You only select ONE input file (image or video).
+  The mask is created by drawing directly on the displayed input image/video frame.
+
+  Please note:
+  - Video processing is computationally intensive for browsers and might be slow
+    or unstable, especially for longer or higher-resolution videos.
+  - The inpainting method is a very basic "smear" and will result in distortions
+    and noticeable artifacts, especially in videos (flickering).
+  - The output will be low-resolution for performance reasons.
+
+  Instructions:
+  1. Select an 'Input Image' or 'Input Video' file.
+  2. The input will appear in the drawing area. Use your mouse/touch to paint
+     black on the areas you want to remove (this creates your mask).
+  3. Adjust brush size with the slider if needed.
+  4. Click 'Process'.
+  5. A preview will appear, and a 'Download Result' button will become active.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free video/image processor - remove objects or anything from a video or image!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #2d3748;
+        }
+        .container {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .file-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .file-input-group input[type="file"] {
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            width: 100%;
+            background-color: #edf2f7;
+            cursor: pointer;
+        }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #4299e1;
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: #3182ce;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .btn-secondary {
+            background-color: #a0aec0;
+            color: white;
+            border: none;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #718096;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .btn:disabled {
+            background-color: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+        .status-log {
+            min-height: 100px;
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: #4a5568;
+        }
+        .mask-drawing-area {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        #drawingCanvas {
+            border: 1px solid #cbd5e0;
+            background-color: white;
+            cursor: crosshair;
+            touch-action: none; /* Prevent scrolling/zooming on touch */
+            max-width: 100%; /* Ensure canvas fits in container */
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .preview-area {
+            text-align: center;
+            margin-top: 20px;
+            border: 1px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .preview-area img, .preview-area video {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .hidden {
+            display: none;
+        }
+        /* Hidden elements are placed off-screen to not affect layout */
+        #tempCanvas, #maskCanvas, #videoElement {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Free video/image processor - remove objects or anything from a video or image!</h1>
+
+        <div class="file-input-group">
+            <label for="inputFile" class="text-lg">Select Input Image or Video:</label>
+            <input type="file" id="inputFile" accept="image/*,video/*" class="rounded-lg">
+        </div>
+
+        <!-- Mask Drawing Area -->
+        <div class="mask-drawing-area hidden" id="maskDrawingArea">
+            <p class="text-gray-600 font-semibold mb-2">Draw on the image/video frame below to mark areas for removal (black):</p>
+            <canvas id="drawingCanvas" class="rounded-lg"></canvas>
+            <div class="mt-2 flex items-center justify-center gap-2">
+                <label for="brushSize" class="text-sm">Brush Size:</label>
+                <input type="range" id="brushSize" min="5" max="50" value="20" class="w-1/2 rounded-full h-2 bg-blue-100 appearance-none cursor-pointer">
+                <span id="brushSizeValue" class="text-sm">20</span>
+            </div>
+            <div class="mt-4 flex justify-center gap-2">
+                <button id="clearDrawingBtn" class="btn btn-secondary text-sm">Clear Drawing</button>
+            </div>
+        </div>
+
+        <div class="flex justify-center gap-4 mt-4">
+            <button id="processBtn" class="btn btn-primary" disabled>Process</button>
+            <button id="resetBtn" class="btn btn-secondary">Reset</button>
+        </div>
+
+        <div class="status-log mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200" id="statusLog" contenteditable="false">
+            Ready. Please select your input file to begin.
+        </div>
+
+        <div class="preview-area hidden" id="previewContainer">
+            <p class="text-gray-600 font-semibold">Processed Output Preview:</p>
+            <img id="imagePreview" class="hidden" alt="Processed Image">
+            <video id="videoPreview" class="hidden" controls autoplay loop muted></video>
+            <a id="downloadBtn" class="btn btn-primary hidden" href="#" download>Download Result</a>
+        </div>
+    </div>
+
+    <!-- Hidden elements for processing -->
+    <canvas id="tempCanvas"></canvas>
+    <canvas id="maskCanvas"></canvas>
+    <canvas id="outputCanvas"></canvas> 
+    <video id="videoElement" preload="auto" muted></video>
+
+    <script>
+        const inputFile = document.getElementById('inputFile');
+        // Removed maskFile input
+        const processBtn = document.getElementById('processBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusLog = document.getElementById('statusLog');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const videoPreview = document.getElementById('videoPreview');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        const tempCanvas = document.getElementById('tempCanvas');
+        const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+
+        const maskCanvas = document.getElementById('maskCanvas');
+        const maskCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
+
+        const outputCanvas = document.getElementById('outputCanvas');
+        const outputCtx = outputCanvas.getContext('2d', { willReadFrequently: true });
+
+        const videoElement = document.getElementById('videoElement');
+
+        // Mask Drawing specific elements
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const drawingCtx = drawingCanvas.getContext('2d', { willReadFrequently: true });
+        const brushSizeSlider = document.getElementById('brushSize');
+        const brushSizeValueSpan = document.getElementById('brushSizeValue');
+        const clearDrawingBtn = document.getElementById('clearDrawingBtn');
+        const maskDrawingArea = document.getElementById('maskDrawingArea');
+
+        let inputFileType = null;
+        let inputFileData = null;
+        let initialDrawingCanvasStateUrl = null; // Store DataURL of the initial input image/frame
+        let outputBlobUrl = null; // To store the URL for the download button
+
+        // Drawing state
+        let isDrawing = false;
+        let currentBrushSize = parseInt(brushSizeSlider.value);
+
+        // Function to append messages to the status log
+        const appendLog = (message) => {
+            statusLog.innerHTML += `<div>${message}</div>`;
+            statusLog.scrollTop = statusLog.scrollHeight; // Auto-scroll to bottom
+        };
+
+        // Enables or disables the process button based on file selections
+        const enableProcessButton = () => {
+            // Process button enabled if input file is loaded AND drawingCanvas has content
+            processBtn.disabled = !(inputFileData && drawingCanvas.width > 0 && drawingCanvas.height > 0);
+        };
+
+        // Clears the preview area
+        const clearPreview = () => {
+            previewContainer.classList.add('hidden');
+            imagePreview.classList.add('hidden');
+            imagePreview.src = '';
+            videoPreview.classList.add('hidden');
+            videoPreview.src = '';
+            videoPreview.pause();
+            downloadBtn.classList.add('hidden');
+            if (outputBlobUrl) {
+                URL.revokeObjectURL(outputBlobUrl);
+                outputBlobUrl = null;
+            }
+        };
+
+        // --- Mask Drawing Functions ---
+        const getMousePos = (canvas, event) => {
+            const rect = canvas.getBoundingClientRect();
+            // Adjust coordinates for canvas scaling / CSS display size
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let clientX, clientY;
+            if (event.touches && event.touches[0]) {
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        };
+
+        const startDrawing = (event) => {
+            event.preventDefault(); // Prevent default touch/mouse actions
+            isDrawing = true;
+            const pos = getMousePos(drawingCanvas, event);
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(pos.x, pos.y);
+            // Draw a dot immediately on click/touch
+            drawingCtx.lineWidth = currentBrushSize;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.strokeStyle = 'black';
+            drawingCtx.lineTo(pos.x, pos.y);
+            drawingCtx.stroke();
+        };
+
+        const draw = (event) => {
+            if (!isDrawing) return;
+            event.preventDefault(); // Prevent default touch/mouse actions
+            const pos = getMousePos(drawingCanvas, event);
+            drawingCtx.lineWidth = currentBrushSize;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.strokeStyle = 'black'; // Always draw in black for the mask
+
+            drawingCtx.lineTo(pos.x, pos.y);
+            drawingCtx.stroke();
+        };
+
+        const stopDrawing = () => {
+            isDrawing = false;
+            drawingCtx.beginPath(); // Reset path to prevent continuous lines
+            enableProcessButton(); // Re-enable process button in case mask content changed
+        };
+
+        const handleBrushSizeChange = (event) => {
+            currentBrushSize = parseInt(event.target.value);
+            brushSizeValueSpan.textContent = currentBrushSize;
+        };
+
+        const clearDrawing = () => {
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            // If an initial input image/frame was loaded, redraw it
+            if (initialDrawingCanvasStateUrl) {
+                 const img = new Image();
+                 img.onload = () => {
+                     drawingCtx.drawImage(img, 0, 0, drawingCanvas.width, drawingCanvas.height);
+                     enableProcessButton();
+                 };
+                 img.src = initialDrawingCanvasStateUrl; // Use stored data URL
+                 appendLog('Drawing canvas reset to original input.');
+            } else {
+                 // If no input was loaded, the canvas is now entirely clear
+                 appendLog('Drawing canvas cleared to blank.');
+                 enableProcessButton();
+            }
+        };
+
+        // Event listener for input file selection
+        inputFile.addEventListener('change', (event) => {
+            clearPreview(); // Clear any existing previews
+            const file = event.target.files[0];
+            if (file) {
+                inputFileType = file.type.startsWith('image/') ? 'image' : 'video';
+                inputFileData = file;
+                appendLog(`Input file selected: ${file.name} (${inputFileType})`);
+
+                // Load input onto drawing canvas for mask creation
+                if (inputFileType === 'image') {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            drawingCanvas.width = img.width;
+                            drawingCanvas.height = img.height;
+                            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                            drawingCtx.drawImage(img, 0, 0);
+                            initialDrawingCanvasStateUrl = drawingCanvas.toDataURL(); // Store initial state
+                            maskDrawingArea.classList.remove('hidden'); // Show drawing area
+                            enableProcessButton();
+                            appendLog('Image loaded for mask drawing.');
+                        };
+                        img.onerror = () => {
+                            appendLog('Error loading input image for drawing.');
+                            maskDrawingArea.classList.add('hidden');
+                            enableProcessButton();
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                } else if (inputFileType === 'video') {
+                    videoElement.src = URL.createObjectURL(file);
+                    videoElement.onloadeddata = () => {
+                        // Draw first frame of video to drawing canvas
+                        drawingCanvas.width = videoElement.videoWidth;
+                        drawingCanvas.height = videoElement.videoHeight;
+                        drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                        drawingCtx.drawImage(videoElement, 0, 0, drawingCanvas.width, drawingCanvas.height);
+                        initialDrawingCanvasStateUrl = drawingCanvas.toDataURL(); // Store initial state
+                        maskDrawingArea.classList.remove('hidden'); // Show drawing area
+                        enableProcessButton();
+                        appendLog('First video frame loaded for mask drawing.');
+                        URL.revokeObjectURL(videoElement.src); // Revoke temporary URL
+                        videoElement.removeAttribute('src'); // Clear src to stop loading video data for drawing
+                    };
+                    videoElement.onerror = () => {
+                        appendLog('Error loading input video for drawing.');
+                        maskDrawingArea.classList.add('hidden');
+                        enableProcessButton();
+                    };
+                }
+            } else {
+                inputFileType = null;
+                inputFileData = null;
+                initialDrawingCanvasStateUrl = null;
+                drawingCanvas.width = 0;
+                drawingCanvas.height = 0;
+                maskDrawingArea.classList.add('hidden');
+                appendLog('Input file selection cancelled.');
+                enableProcessButton();
+            }
+        });
+
+        // Removed maskFile.addEventListener - mask is now drawn on input
+
+        // Event listener for the Reset button
+        resetBtn.addEventListener('click', () => {
+            inputFile.value = '';
+            inputFileType = null;
+            inputFileData = null;
+            initialDrawingCanvasStateUrl = null;
+            processBtn.disabled = true;
+            statusLog.innerHTML = '<div>Ready. Please select your input file to begin.</div>';
+            clearPreview(); // Clear preview on reset
+            // Clear drawing canvas and hide drawing area
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            drawingCanvas.width = 0;
+            drawingCanvas.height = 0;
+            maskDrawingArea.classList.add('hidden');
+            appendLog('Application reset.');
+        });
+
+        // Event listener for the Process button
+        processBtn.addEventListener('click', async () => {
+            if (!inputFileData || drawingCanvas.width === 0 || drawingCanvas.height === 0) {
+                appendLog('Error: Please select an input file and draw your mask.');
+                return;
+            }
+            
+            processBtn.disabled = true;
+            clearPreview(); // Clear previous preview before new processing
+            appendLog('Processing started...');
+
+            if (inputFileType === 'image') {
+                await processImage(inputFileData);
+            } else if (inputFileType === 'video') {
+                await processVideo(inputFileData);
+            }
+            
+            processBtn.disabled = false;
+        });
+
+        // Event listener for the Download button
+        downloadBtn.addEventListener('click', (e) => {
+            if (!outputBlobUrl) {
+                e.preventDefault(); // Prevent default download if no URL is set
+                appendLog('Error: No processed file available for download.');
+                return;
+            }
+            // Download attribute is set in process functions
+        });
+
+        // --- Core Inpainting Logic (Smear Pixels) ---
+        // This function applies the "smear" effect to an ImageData object based on a mask.
+        const smearPixels = (imgData, scaledMaskData, width, height) => {
+            const pixels = imgData.data; // Pixel data of the image
+            const maskPixels = scaledMaskData.data; // Pixel data of the scaled mask
+
+            for (let y = 0; y < height; y++) {
+                let startFill = -1;
+                let endFill = -1;
+
+                // Find the start and end columns of the black mask area in the current row
+                for (let x = 0; x < width; x++) {
+                    const maskIdx = (y * width + x) * 4;
+                    // Check if mask pixel is black (R, G, B are all 0)
+                    // If the mask pixel is anything but fully white, consider it part of the mask
+                    if (maskPixels[maskIdx] < 255 || maskPixels[maskIdx + 1] < 255 || maskPixels[maskIdx + 2] < 255) {
+                        if (startFill === -1) {
+                            startFill = x;
+                        }
+                        endFill = x;
+                    }
+                }
+                
+                // If a black region is found, apply the smear
+                if (startFill !== -1) {
+                    const leftSourceX = Math.max(0, startFill - 1); // Source pixel to the left of the mask
+                    const rightSourceX = Math.min(width - 1, endFill + 1); // Source pixel to the right of the mask
+
+                    const leftSourceIdx = (y * width + leftSourceX) * 4;
+                    const rightSourceIdx = (y * width + rightSourceX) * 4;
+
+                    // Get RGB values of the source pixels
+                    const leftFillSource = [pixels[leftSourceIdx], pixels[leftSourceIdx + 1], pixels[leftSourceIdx + 2]];
+                    const rightFillSource = [pixels[rightSourceIdx], pixels[rightSourceIdx + 1], pixels[rightSourceIdx + 2]];
+
+                    // Fill the masked area by averaging the source pixels
+                    for (let x = startFill; x <= endFill; x++) {
+                        const targetIdx = (y * width + x) * 4;
+                        pixels[targetIdx] = (leftFillSource[0] + rightFillSource[0]) / 2;
+                        pixels[targetIdx + 1] = (leftFillSource[1] + rightFillSource[1]) / 2;
+                        pixels[targetIdx + 2] = (leftFillSource[2] + rightFillSource[2]) / 2;
+                        pixels[targetIdx + 3] = 255; // Keep alpha channel fully opaque
+                    }
+                }
+            }
+            return imgData; // Return the modified ImageData
+        };
+
+        // --- Image Processing Function ---
+        const processImage = async (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        // Define a scale factor for low-resolution output
+                        const scaleFactor = 0.5; 
+                        tempCanvas.width = img.width * scaleFactor;
+                        tempCanvas.height = img.height * scaleFactor;
+                        outputCanvas.width = tempCanvas.width;
+                        outputCanvas.height = tempCanvas.height;
+
+                        // Draw the original image onto the temp canvas, scaled down
+                        tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+                        
+                        // Get the pixel data of the scaled image
+                        const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                        
+                        // Create scaled mask data from the drawingCanvas (which now contains user drawings)
+                        maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+                        maskCanvas.width = tempCanvas.width;
+                        maskCanvas.height = tempCanvas.height;
+                        maskCtx.drawImage(drawingCanvas, 0, 0, maskCanvas.width, maskCanvas.height); // Draw current drawingCanvas state, scaled
+                        const scaledMaskData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+
+                        // Apply the smear inpainting
+                        const processedImageData = smearPixels(imageData, scaledMaskData, tempCanvas.width, tempCanvas.height);
+                        // Put the processed data onto the output canvas
+                        outputCtx.putImageData(processedImageData, 0, 0);
+
+                        // Display preview and enable download
+                        outputCanvas.toBlob((blob) => {
+                            outputBlobUrl = URL.createObjectURL(blob);
+                            imagePreview.src = outputBlobUrl;
+                            imagePreview.classList.remove('hidden');
+                            videoPreview.classList.add('hidden'); // Ensure video preview is hidden
+                            previewContainer.classList.remove('hidden');
+                            downloadBtn.href = outputBlobUrl;
+                            downloadBtn.download = 'output.png';
+                            downloadBtn.classList.remove('hidden');
+                            appendLog('Image processed and preview ready.');
+                            resolve();
+                        }, 'image/png', 0.8);
+                    };
+                    img.onerror = () => {
+                        appendLog('Error loading input image.');
+                        resolve();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        };
+
+        // --- Video Processing Function ---
+        const processVideo = async (file) => {
+            return new Promise(async (resolve) => {
+                videoElement.src = URL.createObjectURL(file);
+                await videoElement.load(); // Load video metadata
+                
+                videoElement.onloadedmetadata = async () => {
+                    URL.revokeObjectURL(videoElement.src); // Release object URL for video
+
+                    const scaleFactor = 0.3; // Very low resolution for video processing
+                    const videoWidth = videoElement.videoWidth;
+                    const videoHeight = videoElement.videoHeight;
+
+                    // Set canvas dimensions to the scaled video dimensions
+                    tempCanvas.width = videoWidth * scaleFactor;
+                    tempCanvas.height = videoHeight * scaleFactor;
+                    outputCanvas.width = tempCanvas.width;
+                    outputCanvas.height = tempCanvas.height;
+
+                    // Create scaled mask data from the drawingCanvas (which now contains user drawings)
+                    maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+                    maskCanvas.width = tempCanvas.width;
+                    maskCanvas.height = tempCanvas.height;
+                    maskCtx.drawImage(drawingCanvas, 0, 0, maskCanvas.width, maskCanvas.height); // Draw current drawingCanvas state, scaled
+                    const scaledMaskData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+
+                    const targetFps = 20; // Target FPS for the output video
+                    const stream = outputCanvas.captureStream(targetFps); // Capture stream from the output canvas
+                    const mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: 'video/webm; codecs=vp8', // Using WebM for broader browser support
+                        videoBitsPerSecond: 1000000 // Low bitrate for low-res output
+                    });
+                    const recordedChunks = [];
+                    
+                    // Event handler for when data is available from MediaRecorder
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            recordedChunks.push(event.data);
+                        }
+                    };
+
+                    // Event handler for when MediaRecorder stops
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                        outputBlobUrl = URL.createObjectURL(blob);
+                        
+                        // Display video preview and enable download
+                        videoPreview.src = outputBlobUrl;
+                        videoPreview.classList.remove('hidden');
+                        imagePreview.classList.add('hidden'); // Ensure image preview is hidden
+                        previewContainer.classList.remove('hidden');
+                        downloadBtn.href = outputBlobUrl;
+                        downloadBtn.download = 'output.webm';
+                        downloadBtn.classList.remove('hidden');
+                        videoPreview.play(); // Start playing the video in the preview
+                        appendLog('Video processed, preview ready, and playing.');
+                        resolve();
+                    };
+
+                    mediaRecorder.start(); // Start recording
+                    appendLog('Video recording started...');
+
+                    let frameCount = 0;
+                    const interval = 1000 / targetFps; // Milliseconds per frame
+                    let lastTime = performance.now(); // Use high-resolution time
+
+                    // Function to process each video frame using requestAnimationFrame
+                    const processFrame = (currentTime) => {
+                        if (videoElement.paused || videoElement.ended) {
+                            mediaRecorder.stop();
+                            appendLog(`Processed ${frameCount} frames.`);
+                            return;
+                        }
+
+                        const elapsed = currentTime - lastTime;
+
+                        // Only process frame if enough time has passed based on target FPS
+                        if (elapsed >= interval) {
+                            // Draw current video frame to temp canvas, scaled down
+                            tempCtx.drawImage(videoElement, 0, 0, tempCanvas.width, tempCanvas.height);
+                            const frameImageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+
+                            // Apply smear inpainting to the frame
+                            const processedFrameData = smearPixels(frameImageData, scaledMaskData, tempCanvas.width, tempCanvas.height);
+
+                            // Draw processed frame to output canvas (which MediaRecorder captures)
+                            outputCtx.putImageData(processedFrameData, 0, 0);
+
+                            frameCount++;
+                            lastTime = currentTime - (elapsed % interval); // Adjust lastTime to maintain consistent interval
+                        }
+                        
+                        requestAnimationFrame(processFrame); // Request next frame
+                    };
+                    
+                    videoElement.currentTime = 0; // Ensure video starts from beginning
+                    videoElement.play(); // Start playing the video to advance frames
+                    requestAnimationFrame(processFrame); // Start the frame processing loop
+
+                };
+
+                videoElement.onerror = () => {
+                    appendLog('Error loading input video.');
+                    resolve();
+                };
+            });
+        };
+
+        // --- Drawing Canvas Event Listeners ---
+        drawingCanvas.addEventListener('mousedown', startDrawing);
+        drawingCanvas.addEventListener('mousemove', draw);
+        drawingCanvas.addEventListener('mouseup', stopDrawing);
+        drawingCanvas.addEventListener('mouseout', stopDrawing); // Stop drawing if mouse leaves canvas
+
+        // Touch events for drawing on mobile
+        drawingCanvas.addEventListener('touchstart', startDrawing);
+        drawingCanvas.addEventListener('touchmove', draw);
+        drawingCanvas.addEventListener('touchend', stopDrawing);
+        drawingCanvas.addEventListener('touchcancel', stopDrawing);
+
+        brushSizeSlider.addEventListener('input', handleBrushSizeChange);
+        clearDrawingBtn.addEventListener('click', clearDrawing);
+
+    </script>
+</body>
+</html>
